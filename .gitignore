@@ -5,9 +5,5 @@ __pycache__/
 .venv/
 venv/
 
-# Build output
-dist/
-output/
-
 # OS
 .DS_Store

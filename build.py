@@ -51,14 +51,14 @@ def main():
         post_links.append(create_post_link(post))
 
         post_html = POST_TEMPLATE.render(**asdict(post))
-        out = Path(f"content/posts/{post.slug}.html")
+        out = Path(f"docs/posts/{post.slug}.html")
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(post_html)
 
     # Render Index
     index = Index(title="Parthiv's Blog", posts=post_links)
     index_html = INDEX_TEMPLATE.render(**asdict(index))
-    index_file = Path("content/index.html")
+    index_file = Path("docs/index.html")
     index_file.parent.mkdir(parents=True, exist_ok=True)
     index_file.write_text(index_html)
 

@@ -16,4 +16,4 @@ pip install -r requirements.txt
 python build.py
 ```
 
-Output is written to the `content/` directory.
+Output is written to the `docs/` directory, which is the source for GitHub Pages (`main` branch → `/docs`).
