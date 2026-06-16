@@ -2,6 +2,7 @@ from pathlib import Path
 import markdown
 from jinja2 import Environment, FileSystemLoader
 from dataclasses import dataclass, asdict
+from pygments.formatters import HtmlFormatter
 
 env = Environment(loader=FileSystemLoader("."))
 INDEX_TEMPLATE = env.get_template("templates/index.html")
@@ -29,7 +30,7 @@ def parse_post_markdown(content: str) -> Post:
     for line in meta.strip().splitlines():
         k, v = line.split(":", 1)
         frontmatter[k.strip()] = v.strip().strip('"')
-    html = markdown.markdown(body, extensions=["fenced_code", "tables"])
+    html = markdown.markdown(body, extensions=["fenced_code", "tables", "codehilite"])
     return Post(
         title=frontmatter["title"],
         date=frontmatter["date"],
@@ -43,6 +44,9 @@ def create_post_link(post: Post):
 
 
 def main():
+    pygments_css = HtmlFormatter(style="default").get_style_defs(".codehilite")
+    Path("docs/posts/pygments.css").write_text(pygments_css)
+
     post_links = []
     for post_md_file in Path("posts").glob("*.md"):
         content = post_md_file.read_text()

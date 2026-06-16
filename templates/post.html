@@ -6,11 +6,8 @@
     <title>{{title}}</title>
 
     <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="pygments.css">
     <link rel="stylesheet" href="post.css">
-
-    <!-- Optional code highlighting -->
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
 </head>
 
 <body>
@@ -32,5 +29,21 @@
     </p>
 </footer>
 
+<script>
+document.querySelectorAll("pre code").forEach(block => {
+    const btn = document.createElement("button");
+    btn.className = "copy-btn";
+    btn.textContent = "Copy";
+    const container = block.closest(".codehilite") || block.parentElement;
+    container.appendChild(btn);
+    btn.addEventListener("click", () => {
+        navigator.clipboard.writeText(block.innerText).then(() => {
+            btn.textContent = "Copied!";
+            btn.classList.add("copied");
+            setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 2000);
+        });
+    });
+});
+</script>
 </body>
 </html>

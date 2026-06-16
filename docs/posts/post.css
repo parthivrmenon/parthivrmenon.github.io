@@ -3,22 +3,6 @@
     font-size: 0.875rem;
 }
 
-/* Index post list */
-ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-ul li {
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-ul li:last-child {
-    border-bottom: none;
-}
-
 /* Post content typography */
 main h2, main h3 {
     line-height: 1.3;
@@ -29,23 +13,47 @@ main p {
     margin: 1rem 0;
 }
 
-main code {
-    font-family: "SFMono-Regular", Consolas, monospace;
-    font-size: 0.875em;
-    background: #f5f5f5;
-    padding: 0.15em 0.35em;
-    border-radius: 3px;
-}
-
 main pre {
-    background: #f5f5f5;
-    padding: 1rem;
-    border-radius: 4px;
-    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
-main pre code {
-    background: none;
-    padding: 0;
+.codehilite {
+    position: relative;
+    background: #f6f8fa;
+    border: 1px solid #e1e4e8;
+    border-radius: 4px;
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-family: Menlo, Consolas, monospace;
     font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+main code {
+    font-family: Menlo, Consolas, monospace;
+    font-size: 0.85em;
+    border: 1px solid #e1e1e1;
+    border-radius: 3px;
+    padding: 0.15em 0.4em;
+}
+
+.copy-btn {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.5rem;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.7rem;
+    font-family: Menlo, "SFMono-Regular", Consolas, monospace;
+    background: none;
+    color: #888;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.copy-btn.copied {
+    color: #2a9d6e;
+    border-color: #2a9d6e;
 }

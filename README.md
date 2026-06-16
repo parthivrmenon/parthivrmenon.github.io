@@ -17,3 +17,13 @@ python build.py
 ```
 
 Output is written to the `docs/` directory, which is the source for GitHub Pages (`main` branch → `/docs`).
+
+## Preview
+
+```bash
+
+python build.py
+python -m http.server 8000 --directory docs
+```
+
+Open `http://localhost:8000`.
