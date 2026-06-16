@@ -19,7 +19,6 @@ class Post:
 
 @dataclass
 class Index:
-    title: str
     posts: list[str]
 
 
@@ -47,20 +46,22 @@ def main():
     pygments_css = HtmlFormatter(style="default").get_style_defs(".codehilite")
     Path("docs/posts/pygments.css").write_text(pygments_css)
 
-    post_links = []
+    posts = []
     for post_md_file in Path("posts").glob("*.md"):
         content = post_md_file.read_text()
         post = parse_post_markdown(content)
-
-        post_links.append(create_post_link(post))
+        posts.append(post)
 
         post_html = POST_TEMPLATE.render(**asdict(post))
         out = Path(f"docs/posts/{post.slug}.html")
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(post_html)
 
+    posts.sort(key=lambda p: p.date, reverse=True)
+    post_links = [create_post_link(p) for p in posts]
+
     # Render Index
-    index = Index(title="Parthiv's Blog", posts=post_links)
+    index = Index(posts=post_links)
     index_html = INDEX_TEMPLATE.render(**asdict(index))
     index_file = Path("docs/index.html")
     index_file.parent.mkdir(parents=True, exist_ok=True)

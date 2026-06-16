@@ -3,6 +3,11 @@
     font-size: 0.875rem;
 }
 
+header h1,
+header .meta {
+    text-align: center;
+}
+
 /* Post content typography */
 main h2, main h3 {
     line-height: 1.3;
