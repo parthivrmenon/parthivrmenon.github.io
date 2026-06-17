@@ -45,41 +45,11 @@ h3 {
     font-size: 1.2em;
 }
 
-.topnav {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 0.75rem 1.5rem;
-    display: flex;
-    gap: 1.5rem;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.topnav a {
-    color: #555;
-    text-decoration: none;
-}
-
-.topnav a.active {
-    color: #222;
-    font-weight: 600;
-}
-
-.topnav a:hover {
-    color: #222;
-}
-
 .socials {
     display: flex;
     gap: 1rem;
-}
-
-.socials a {
-    color: #555;
-    text-decoration: none;
-}
-
-.socials a:hover {
-    color: #222;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
 }
 
 header hr,

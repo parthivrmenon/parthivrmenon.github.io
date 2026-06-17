@@ -1,4 +1,5 @@
 from pathlib import Path
+import shutil
 import markdown
 from jinja2 import Environment, FileSystemLoader
 from dataclasses import dataclass, asdict
@@ -6,6 +7,7 @@ from pygments.formatters import HtmlFormatter
 
 env = Environment(loader=FileSystemLoader("."))
 INDEX_TEMPLATE = env.get_template("templates/index.html")
+POSTS_TEMPLATE = env.get_template("templates/posts.html")
 POST_TEMPLATE = env.get_template("templates/post.html")
 
 
@@ -18,7 +20,7 @@ class Post:
 
 
 @dataclass
-class Index:
+class PostsPage:
     posts: list[str]
 
 
@@ -43,6 +45,8 @@ def create_post_link(post: Post):
 
 
 def main():
+    shutil.copytree("static", "docs", dirs_exist_ok=True)
+
     pygments_css = HtmlFormatter(style="default").get_style_defs(".codehilite")
     Path("docs/posts/pygments.css").write_text(pygments_css)
 
@@ -60,12 +64,12 @@ def main():
     posts.sort(key=lambda p: p.date, reverse=True)
     post_links = [create_post_link(p) for p in posts]
 
-    # Render Index
-    index = Index(posts=post_links)
-    index_html = INDEX_TEMPLATE.render(**asdict(index))
-    index_file = Path("docs/index.html")
-    index_file.parent.mkdir(parents=True, exist_ok=True)
-    index_file.write_text(index_html)
+    # Render index.html
+    Path("docs/index.html").write_text(INDEX_TEMPLATE.render())
+
+    # Render posts.html
+    posts_page = PostsPage(posts=post_links)
+    Path("docs/posts.html").write_text(POSTS_TEMPLATE.render(**asdict(posts_page)))
 
 
 if __name__ == "__main__":
