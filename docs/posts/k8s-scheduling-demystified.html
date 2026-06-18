@@ -33,16 +33,16 @@ What is the best way to configure requests and limits for your workload so that 
 </blockquote>
 <p>To answer this correctly, you need to understand how Kubernetes thinks about resources. Kubernetes makes resource management decisions across two distinct phases:</p>
 <ul>
-<li><strong>Scheduling</strong> -- Requests help the scheduler decide where a Pod can run.</li>
-<li><strong>Enforcement</strong> -- Limits and QoS determine what happens when things go wrong, such as memory pressure on a node.</li>
+<li>Scheduling -- Requests help the scheduler decide where a Pod can run.</li>
+<li>Enforcement -- Limits and QoS determine what happens when things go wrong, such as memory pressure on a node.</li>
 </ul>
 <h2>Requests</h2>
 <p>Resource requests are simply requests made to the Kubernetes Scheduler. If a Pod requests 3 GiB of memory, the scheduler guarantees that it will be placed on a node that can accommodate that request.</p>
 <p>However, if the node has additional free resources available, the container is allowed to use more than its requested amount. Requests are only about placement, not enforcement.</p>
 <h3>Caveats to Keep in Mind</h3>
 <ul>
-<li><strong>Pod without limits:</strong> If a Pod specifies requests but no limits, it can use any available resources on the node beyond its request - not a great idea for production.</li>
-<li><strong>Pod with limits but no requests:</strong> Kubernetes automatically sets the request equal to the limit. This ensures the scheduler can place the Pod safely.</li>
+<li>Pod without limits: If a Pod specifies requests but no limits, it can use any available resources on the node beyond its request - not a great idea for production.</li>
+<li>Pod with limits but no requests: Kubernetes automatically sets the request equal to the limit. This ensures the scheduler can place the Pod safely.</li>
 </ul>
 <h2>Limits</h2>
 <p>Resource limits are enforced at runtime by the container runtime and the kubelet. Unlike requests, which only affect scheduling, limits define hard boundaries on how a container can consume resources.</p>
@@ -64,7 +64,7 @@ What is the best way to configure requests and limits for your workload so that 
 <p>Kubernetes uses QoS to decide which Pods are evicted first when the node is under resource pressure.</p>
 <h3>Guaranteed</h3>
 <ul>
-<li>Every container in the Pod has both requests and limits specified for cpu and memory, <strong>and</strong> requests == limits.</li>
+<li>Every container in the Pod has both requests and limits specified for cpu and memory, and requests == limits.</li>
 <li>Strongest guarantees.</li>
 <li>Last to be evicted.</li>
 </ul>

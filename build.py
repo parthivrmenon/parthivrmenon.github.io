@@ -41,7 +41,7 @@ def parse_post_markdown(content: str) -> Post:
 
 
 def create_post_link(post: Post):
-    return f'<a href="posts/{post.slug}.html">{post.title}</a> <span class="meta">{post.date}</span>'
+    return f'<a href="posts/{post.slug}.html">{post.title} - </a> <span class="meta">{post.date}</span>'
 
 
 def main():
