@@ -19,11 +19,6 @@ class Post:
     content: str
 
 
-@dataclass
-class PostsPage:
-    posts: list[str]
-
-
 def parse_post_markdown(content: str) -> Post:
     """Parse markdown into frontmatter and HTML"""
     _, meta, body = content.split("---", maxsplit=2)
@@ -40,16 +35,10 @@ def parse_post_markdown(content: str) -> Post:
     )
 
 
-def create_post_link(post: Post):
-    return f'<a href="posts/{post.slug}.html">{post.title} - </a> <span class="meta">{post.date}</span>'
-
-
 def main():
     shutil.copytree("static", "docs", dirs_exist_ok=True)
-
     pygments_css = HtmlFormatter(style="default").get_style_defs(".codehilite")
     Path("docs/posts/pygments.css").write_text(pygments_css)
-
     posts = []
     for post_md_file in Path("posts").glob("*.md"):
         content = post_md_file.read_text()
@@ -62,14 +51,9 @@ def main():
         out.write_text(post_html)
 
     posts.sort(key=lambda p: p.date, reverse=True)
-    post_links = [create_post_link(p) for p in posts]
 
-    # Render index.html
     Path("docs/index.html").write_text(INDEX_TEMPLATE.render())
-
-    # Render posts.html
-    posts_page = PostsPage(posts=post_links)
-    Path("docs/posts.html").write_text(POSTS_TEMPLATE.render(**asdict(posts_page)))
+    Path("docs/posts.html").write_text(POSTS_TEMPLATE.render(posts=posts))
 
 
 if __name__ == "__main__":
