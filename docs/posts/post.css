@@ -45,7 +45,7 @@ main pre {
     line-height: 1.6;
 }
 
-main code {
+main :not(pre) > code {
     font-family: Menlo, Consolas, monospace;
     font-size: 0.85em;
     border: 1px solid var(--color-border);

@@ -26,7 +26,7 @@
 <main>
     <h2>The Why</h2>
 <p>... or rather Why not use something like LangChain?</p>
-<p>I find frameworks like LangChain makes building Agentic LLMs "feel" a lot more complicated that it actually is. In order to understand the agentic underpinnings - tool calling, context and agentic loops better, we must forego these frameworks.</p>
+<p>I find frameworks like LangChain makes building Agentic LLMs "feel" a lot more complicated than it actually is. In order to understand the agentic underpinnings - tool calling, context and agent loops better, we must forego these frameworks and build these primitives ourselves.</p>
 <p>In this post, we will  build <em>Trivi-Al</em>, a tiny chatbot that can ingest a document of your choosing and answer questions about it.</p>
 <h2>What you will need</h2>
 <ul>
@@ -43,9 +43,9 @@
 <div class="codehilite"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>venv/bin/activate
 </code></pre></div>
 
-<p>You should now see something like <code>(venv)</code> at the start of your terminal prompt. That means any packages we install will go into this project environment.</p>
+<p>You should now see something like <code>(venv)</code> at the start of your terminal prompt. This means any packages you install will go into this project environment.</p>
 <h3>2. Installing dependencies</h3>
-<p>Create a <code>requirements.txt</code> file and add the packages we will use:</p>
+<p>Create a <code>requirements.txt</code> file and add these packages:</p>
 <div class="codehilite"><pre><span></span><code>openai
 python-dotenv
 pytest
@@ -66,9 +66,9 @@ pytest
 <div class="codehilite"><pre><span></span><code>OPENAI_API_KEY=your_key_here
 </code></pre></div>
 
-<p>The <code>load_dotenv()</code> call in <code>main.py</code> will load this automatically.</p>
+<p>The <code>load_dotenv()</code> call in <code>main.py</code> will load this automatically. We will get to this later.</p>
 <h2>Prompts</h2>
-<p>We will create our prompt as a markdown file. This keeps the prompt easy to read and edit without touching the code.</p>
+<p>Create the prompt as a markdown file. This keeps the prompt easy to read and edit without touching the code.</p>
 <p>Create a file called <code>prompts/system_prompt.md</code>:</p>
 <div class="codehilite"><pre><span></span><code>Answer the user&#39;s question using only information retrieved from the indexed document.
 
@@ -112,7 +112,8 @@ Tools:
 <p>This prompt essentially lays out the 'protocol' to be used by the LLM when communicating with the user as well as the rest of the code we are about to write.</p>
 <h2>Prompt Management</h2>
 <p>Next, create <code>src/prompt_manager.py</code> which allows us to render our prompts dynamically at runtime.</p>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">PromptManager</span><span class="p">:</span>
@@ -130,6 +131,13 @@ Tools:
             <span class="n">rendered</span> <span class="o">=</span> <span class="n">rendered</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">{{{{</span><span class="s2"> </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> </span><span class="se">}}}}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">rendered</span>
+</code></pre></div>
+
+<p>The <code>render</code> method allows us to do variable interpolation at runtime like shown below.</p>
+<div class="codehilite"><pre><span></span><code>&gt;&gt;&gt;<span class="w"> </span><span class="nv">sample_template</span><span class="o">=</span><span class="s2">&quot;Hello {{ name }}&quot;</span>
+&gt;&gt;&gt;<span class="w"> </span><span class="nv">pm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>PromptManager<span class="o">(</span>sample_template<span class="o">)</span>
+&gt;&gt;&gt;<span class="w"> </span>pm.render<span class="o">(</span><span class="nv">name</span><span class="o">=</span><span class="s2">&quot;Bob&quot;</span><span class="o">)</span>
+<span class="s1">&#39;Hello Bob&#39;</span>
 </code></pre></div>
 
 <h2>Testing the PromptManager</h2>
@@ -156,7 +164,7 @@ Tools:
 </code></pre></div>
 
 <h2>Retrieval - building a simple DocStore</h2>
-<p>Out in the wild, your agent probably retrieves stuff from a VectorDB, but for our requirement we will build somethinf far more basic - a simple Document store that allows us to index a document and search within it.</p>
+<p>Out in the wild, most LLMs retrieve stuff from a VectorDB, but for our requirement we will build something basic - a simple Document store that allows us to index a document and search within it.</p>
 <p>Create a file called <code>src/doc_store.py</code>:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">DocStore</span><span class="p">:</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -180,10 +188,15 @@ Tools:
         <span class="k">return</span> <span class="n">matches</span><span class="p">[:</span><span class="n">k</span><span class="p">]</span>
 </code></pre></div>
 
+<p>The DocStore provides methods:</p>
+<ul>
+<li><code>index</code> method chunks the document into paragraphs.</li>
+<li><code>search</code> does a word based search on the chunks and returns the ones that match </li>
+</ul>
 <h2>Testing the DocStore</h2>
 <p>As usual, we write a few tests to ensure everything works as expected. We will test against a real file so our assertions are grounded in known content.</p>
 <h3>1. Creating a test fixture</h3>
-<p>Create a file <code>data/elephants.txt</code> with a few paragraphs separated by blank lines:</p>
+<p>Create <code>data/elephants.txt</code> with the following content.</p>
 <div class="codehilite"><pre><span></span><code>The African elephant is the largest land animal on Earth.
 Adult males can weigh up to 6,350 kilograms and stand 3 to 4 meters tall at the shoulder.
 Elephants have large ears that help them regulate body temperature in hot climates.
@@ -218,13 +231,13 @@ Their exceptional memory helps them remember water sources and recognize other e
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_index</span><span class="p">():</span>
     <span class="n">db</span> <span class="o">=</span> <span class="n">DocStore</span><span class="p">()</span>
-    <span class="c1"># simple.txt has 4 paragraphs separated by \n\n</span>
+    <span class="c1"># elephants.txt has 4 paragraphs</span>
     <span class="k">assert</span> <span class="n">db</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;./data/elephants.txt&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">chunks</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_search</span><span class="p">(</span><span class="n">db</span><span class="p">):</span>
-    <span class="c1"># &quot;matriarchal&quot; appears in exactly 1 chunk</span>
+    <span class="c1"># &quot;matriarchal&quot; appears in exactly 1 paragraph</span>
     <span class="n">search_results</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="s2">&quot;matriarchal&quot;</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">search_results</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
 
@@ -232,7 +245,7 @@ Their exceptional memory helps them remember water sources and recognize other e
     <span class="n">search_results</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="s2">&quot;Matriarchal&quot;</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">search_results</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
 
-    <span class="c1"># &quot;elephant&quot; appears in all 4 chunks, k=1 should limit to 1</span>
+    <span class="c1"># &quot;elephant&quot; appears in all 4 paragraphs but k=1 should limit it to 1</span>
     <span class="n">search_results</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="s2">&quot;elephant&quot;</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">search_results</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
 
@@ -266,7 +279,7 @@ Their exceptional memory helps them remember water sources and recognize other e
 
 <p><code>TOOLS_REGISTRY</code> describes the tools and their expected arguments. This gets injected into the system prompt so the LLM knows what it can ask for.</p>
 <h2>LLM Client</h2>
-<p>Nex we create a <code>src/llm_client.py</code> to handle all communication with the LLM:</p>
+<p>Next we create a <code>src/llm_client.py</code> to handle all communication with the LLM:</p>
 <div class="codehilite"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span>
@@ -309,11 +322,24 @@ Their exceptional memory helps them remember water sources and recognize other e
         <span class="p">)</span>
 </code></pre></div>
 
-<p><code>Message</code> is a dataclass for conversation turns. <code>LLMClient.invoke</code> formats the conversation, calls the API, and parses the JSON response back into a <code>Message</code>.</p>
+<p>There are a few things to pay attention to here.</p>
+<p>The <code>Message</code> dataclass encapsulates each conversation turn. </p>
+<ul>
+<li>Both the user as well as the assistant sends <code>Message(s)</code> back and forth by setting the appropriate <code>role</code> attribute.</li>
+<li>It also contains a <code>tool_call</code> attribute that the assistant can use to express an intention to use a tool. </li>
+</ul>
+<p>The <code>invoke</code> method generates a response from the LLM.
+Note that the LLM receives 3 things as part of its instructions:</p>
+<ul>
+<li>The <code>model</code> to use to generate the response. </li>
+<li>The entire "history" of <code>Message(s)</code> from previous conversation turns</li>
+<li>The response format</li>
+</ul>
+<p>The <code>LLMClient</code> formats the conversation, calls the API, and parses the JSON response back into a <code>Message</code> ready for the next conversation turn.</p>
 <h2>Agentic Loop</h2>
 <p>Now we put it all together in <code>main.py</code>.</p>
 <h3>1. Imports</h3>
-<p>Let's add all the imports first</p>
+<p>Let's add all the imports first and get it out of the way.</p>
 <div class="codehilite"><pre><span></span><code><span class="c1"># main.py</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
@@ -328,7 +354,7 @@ Their exceptional memory helps them remember water sources and recognize other e
 </code></pre></div>
 
 <h3>2. System Prompt</h3>
-<p>Create the System Prompt that will be passed into the LLM context.</p>
+<p>Create the System Prompt by combining the prompt, response format and tools registry that we defined earlier.</p>
 <div class="codehilite"><pre><span></span><code><span class="c1"># main.py</span>
 
 <span class="n">RESPONSE_FORMAT</span> <span class="o">=</span> <span class="p">{</span>
@@ -346,7 +372,8 @@ Their exceptional memory helps them remember water sources and recognize other e
 </code></pre></div>
 
 <h3>3. The LLM Wrappper</h3>
-<p>Next, we initialize DocStore and the LLM wrapper</p>
+<p>Next, we initialize DocStore and the LLM client.
+The <code>load_dotenv</code> method will load the <code>OPENAI_API_KEY</code> from the <code>.env</code> file</p>
 <div class="codehilite"><pre><span></span><code><span class="c1"># main.py</span>
 
 <span class="n">docs</span> <span class="o">=</span> <span class="n">DocStore</span><span class="p">()</span>
@@ -359,7 +386,8 @@ Their exceptional memory helps them remember water sources and recognize other e
 </code></pre></div>
 
 <h3>4. handle_turn</h3>
-<p><code>handle_turn</code> handles one "full" turn of the conversation:</p>
+<p>This is where we create two important "abilities" of our chatbot: Memory and Tool Calling</p>
+<p>The <code>handle_turn</code> method handles one "full" turn of the conversation:</p>
 <ul>
 <li>it appends the user message to the <code>conversation</code> list which serves as our agent memory</li>
 <li>it calls the LLM, runs any requested tool, then calls the LLM again with the result. </li>
@@ -396,8 +424,8 @@ Their exceptional memory helps them remember water sources and recognize other e
     <span class="k">return</span> <span class="n">ai_msg</span>
 </code></pre></div>
 
-<h3>5. The Loop</h3>
-<p>Now, a simple while loop is all we need for our agent to converse with the user. </p>
+<h3>5. Agent Loop</h3>
+<p>Our Agent Loop is a simple while loop.</p>
 <div class="codehilite"><pre><span></span><code><span class="c1"># main.py</span>
 
 <span class="n">conversation</span> <span class="o">=</span> <span class="p">[]</span>
@@ -412,7 +440,7 @@ Their exceptional memory helps them remember water sources and recognize other e
     <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
 </code></pre></div>
 
-<p>At this point we have a working document chatbot.</p>
+<p>Voila! We have a working chatbot.</p>
 <h2>Running the App</h2>
 <div class="codehilite"><pre><span></span><code>python<span class="w"> </span>main.py
 </code></pre></div>
