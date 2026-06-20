@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Building Trivi-Al: a tiny QnA Bot (Just Python, no Frameworks)</title>
+    <title>Build Your Own LLM Agent with RAG from Scratch (Python, no Agent Frameworks)</title>
 
     <link rel="stylesheet" href="/style.css">
     <link rel="stylesheet" href="pygments.css">
@@ -18,7 +18,7 @@
 </nav>
 
 <header>
-    <h1>Building Trivi-Al: a tiny QnA Bot (Just Python, no Frameworks)</h1>
+    <h1>Build Your Own LLM Agent with RAG from Scratch (Python, no Agent Frameworks)</h1>
     <p class="meta">2026-06-14</p>
     <hr>
 </header>
@@ -27,7 +27,7 @@
     <h2>The Why</h2>
 <p>... or rather Why not use something like LangChain?</p>
 <p>I find frameworks like LangChain makes building Agentic LLMs "feel" a lot more complicated than it actually is. In order to understand the agentic underpinnings - tool calling, context and agent loops better, we must forego these frameworks and build these primitives ourselves.</p>
-<p>In this post, we will  build <em>Trivi-Al</em>, a tiny chatbot that can ingest a document of your choosing and answer questions about it.</p>
+<p>In this post, we will build <em>Trivi-Al</em>, a tiny chatbot that can ingest a document of your choosing and answer questions about it.</p>
 <h2>What you will need</h2>
 <ul>
 <li>Python 3.x</li>
@@ -263,7 +263,7 @@ Their exceptional memory helps them remember water sources and recognize other e
 
 <p>You should see all tests pass.</p>
 <h2>Tools</h2>
-<p>Create <code>src/tools.py</code> to define the available tool and it's signature:</p>
+<p>Create <code>src/tools.py</code> to define the available tool and its signature:</p>
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">src.doc_store</span><span class="w"> </span><span class="kn">import</span> <span class="n">DocStore</span>
 
 
@@ -318,7 +318,7 @@ Their exceptional memory helps them remember water sources and recognize other e
         <span class="k">return</span> <span class="n">Message</span><span class="p">(</span>
             <span class="n">role</span><span class="o">=</span><span class="n">parsed_result</span><span class="p">[</span><span class="s2">&quot;role&quot;</span><span class="p">],</span>
             <span class="n">content</span><span class="o">=</span><span class="n">parsed_result</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">],</span>
-            <span class="n">tool_call</span><span class="o">=</span><span class="n">parsed_result</span><span class="p">[</span><span class="s2">&quot;tool_call&quot;</span><span class="p">],</span>
+            <span class="n">tool_call</span><span class="o">=</span><span class="n">parsed_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tool_call&quot;</span><span class="p">),</span>
         <span class="p">)</span>
 </code></pre></div>
 
@@ -371,7 +371,7 @@ Note that the LLM receives 3 things as part of its instructions:</p>
 <span class="p">)</span>
 </code></pre></div>
 
-<h3>3. The LLM Wrappper</h3>
+<h3>3. The LLM Wrapper</h3>
 <p>Next, we initialize DocStore and the LLM client.
 The <code>load_dotenv</code> method will load the <code>OPENAI_API_KEY</code> from the <code>.env</code> file</p>
 <div class="codehilite"><pre><span></span><code><span class="c1"># main.py</span>
@@ -456,6 +456,18 @@ Your<span class="w"> </span>name<span class="w"> </span>is<span class="w"> </spa
 User:<span class="w"> </span><span class="nb">exit</span>
 </code></pre></div>
 
+<h2>What We Built</h2>
+<p>In this post we built an LLM agent from scratch — no LangChain, no agent frameworks, just Python.</p>
+<p>Let's do a quick recap of the various pieces we built:</p>
+<ul>
+<li><strong>DocStore</strong> — a retrieval system that chunks a document and searches it using keyword matching, giving the LLM grounded context instead of relying on its training data.</li>
+<li><strong>PromptManager</strong> — a lightweight template engine that injects the tool registry and response schema into the system prompt at runtime.</li>
+<li><strong>Custom tool-calling protocol</strong> — rather than using OpenAI's built-in function calling, we defined our own JSON schema so the LLM can express tool requests. This makes the protocol explicit and easy to inspect.</li>
+<li><strong>Agentic loop</strong> — a <code>handle_turn</code> function that gives the agent memory (the conversation list) and the ability to act (fetch context, then answer).</li>
+</ul>
+<p>The result is a chatbot that can answer questions about any document you give it, remember the conversation, and tell you when it doesn't know something.</p>
+<p>Hopefully, this exercise has given you a deeper understanding of how these Agents actually work under the hood. </p>
+<p>If you want to find a fuller implementation of Trivi-Al, check out the <a href="https://github.com/parthivrmenon/trivi-al">repo</a>.</p>
 <hr />
 </main>
 
