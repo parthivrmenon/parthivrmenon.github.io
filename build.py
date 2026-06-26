@@ -37,7 +37,7 @@ def parse_post_markdown(content: str) -> Post:
 
 def main():
     shutil.copytree("static", "docs", dirs_exist_ok=True)
-    pygments_css = HtmlFormatter(style="default").get_style_defs(".codehilite")
+    pygments_css = HtmlFormatter(style="monokai").get_style_defs(".codehilite")
     Path("docs/posts/pygments.css").write_text(pygments_css)
     posts = []
     for post_md_file in Path("posts").glob("*.md"):

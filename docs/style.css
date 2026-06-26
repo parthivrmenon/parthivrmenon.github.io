@@ -2,17 +2,17 @@
    Color Palette
    ============================================================= */
 :root {
-    --color-text:        #222;
-    --color-bg:          #fff;
-    --color-muted:       #555;
-    --color-subtle:      #888;
-    --color-heading:     #111;
+    --color-text:        #e2e2e2;
+    --color-bg:          #141414;
+    --color-muted:       #888;
+    --color-subtle:      #666;
+    --color-heading:     #f0f0f0;
     --color-accent:      #5a9e6f;
-    --color-link:        #0066cc;
-    --color-border:      #e0e0e0;
-    --color-border-soft: #f0f0f0;
-    --color-border-mid:  #999;
-    --color-code-bg:     #f6f8fa;
+    --color-link:        #e2e2e2;
+    --color-border:      #2e2e2e;
+    --color-border-soft: #222;
+    --color-border-mid:  #3a3a3a;
+    --color-code-bg:     #1e1e1e;
 }
 
 /* =============================================================
@@ -125,7 +125,8 @@ a:hover {
 }
 
 .topnav a:hover {
-    color: var(--color-text);
+    /* color: var(--color-text); */
+    text-decoration: underline;
 }
 
 /* =============================================================
