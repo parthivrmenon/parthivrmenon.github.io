@@ -21,7 +21,13 @@
 <main>
     <ul class="posts">
     {% for post in posts %}
-        <li><a href="posts/{{ post.slug }}.html">{{ post.title }} - </a> <span class="meta">{{ post.date }}</span></li>
+        <li>
+            <div class="post-title">
+                <a href="posts/{{ post.slug }}.html">{{ post.title }}</a>
+                {% for tag in post.tags %}<span class="tag">{{ tag }}</span>{% endfor %}
+            </div>
+            <span class="meta">{{ post.date }}</span>
+        </li>
     {% endfor %}
     </ul>
 </main>

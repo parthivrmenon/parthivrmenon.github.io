@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Startup Probe Paradox: Notes on Kubernetes Probes</title>
+
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="pygments.css">
+    <link rel="stylesheet" href="post.css">
+</head>
+
+<body>
+
+<nav class="topnav">
+    <a href="/index.html">About</a>
+    <a href="/posts.html">Posts</a>
+</nav>
+
+<header>
+    <h1>The Startup Probe Paradox: Notes on Kubernetes Probes</h1>
+    <p class="meta">2026-01-10</p>
+    <hr>
+</header>
+
+<main>
+    <p>Let us imagine an application running on Kubernetes that has the following characteristics:</p>
+<ul>
+<li>
+<p>The application takes 300-600 seconds upon a fresh startup to become ready. </p>
+</li>
+<li>
+<p>Once running, you want fast detection of failures. An unresponsive pod should be restarted quickly. </p>
+</li>
+</ul>
+<p>An example of such a workload would be <a href="https://thanos.io/tip/components/store.md/#store">Thanos Store Gateway</a>. 
+The Storegateway pods usually have a lot of data to read from a remote storage before they are ready to serve the <a href="https://thanos.io/tip/components/query.md/#querierquery">Thanos Querier</a>. </p>
+<p>How would one configure Kubernetes health probes for this workload?</p>
+<h2>Kubernetes Health Checks (Probes)</h2>
+<p>Kubernetes supports three types of probes:</p>
+<ul>
+<li><em>startupProbe</em>: If configured, Kubernetes does not execute liveness or readyness probes until this probe succeeds. The probe is evaluated only at startup and is intended to allows applications enough time to initialize. If the probe fails, Kubernetes will kill the container.</li>
+<li><em>readinessProbe</em>: This probe tells Kubernetes whether a container is 'ready' to receive traffic. If this probe fails, Kubernetes removes the pod from service (ie it does not recieve any traffic) but does not restart it.</li>
+<li><em>livenessProbe</em>: This probe tells Kubernetes whether a container is 'alive'. If this probe fails, Kubernetes will restart the container. </li>
+</ul>
+<h3>Workload Characteristics</h3>
+<p>Notice that the workload has two conflicting characteristics:</p>
+<ul>
+<li>A slow, stateful startup</li>
+<li>A need for fast failure detection once running</li>
+</ul>
+<p>The ideal configuration pairs a patient, forgiving startupProbe with an aggressive livenessProbe to meet these conflicting requirements.</p>
+<h2>Configuration</h2>
+<h3>Wait for startup with a startupProbe</h3>
+<p>The application can expose a single /ready endpoint that reports whether it is fully initialised.</p>
+<p>A startupProbe configured against this endpoint allows the application to take its full 300–600 seconds to initialise without being penalised. While the startup probe is failing, Kubernetes will not evaluate liveness or readiness, preventing premature restarts.</p>
+<h3>Failing fast with a livenessProbe</h3>
+<p>Once startup succeeds, to facilitate fast detection of genuine failures, a relatively aggressive livenessProbe can be configured so that if the process becomes unresponsive, the pod is restarted quickly.</p>
+<h3>Failover gracefully using a readynessProbe</h3>
+<p>Finally, a readinessProbe can be configured that hits the same /ready endpoint, but is evaluated continuously once startup has completed.</p>
+<p>During startup, that endpoint naturally reports “not ready”. After startup succeeds, the readiness probe ensures the pod is only included when it can actually serve traffic, and is cleanly removed during partial failures or degraded states without triggering restarts.</p>
+<h3>A Note on initialDelaySeconds</h3>
+<p>Although it is tempting to use <code>initialDelaySeconds</code> to ask the probe's to wait until the pods are ready, this is still sub-optinmal because n <code>initialDelaySeconds</code> forces you to guess how long initialisation might take. In this case, startup time varies widely (300–600 seconds). Any fixed delay risks being either too short, causing restart loops or unnecessarily long, masking real failures.</p>
+<hr />
+</main>
+
+<footer>
+    <hr>
+    <nav class="socials">
+        <a href="https://github.com/parthivrmenon" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://www.linkedin.com/in/parthivrmenon/" target="_blank" rel="noopener">LinkedIn</a>
+    </nav>
+</footer>
+
+<script>
+document.querySelectorAll("pre code").forEach(block => {
+    const btn = document.createElement("button");
+    btn.className = "copy-btn";
+    btn.textContent = "Copy";
+    const container = block.closest(".codehilite") || block.parentElement;
+    container.appendChild(btn);
+    btn.addEventListener("click", () => {
+        navigator.clipboard.writeText(block.innerText.trim()).then(() => {
+            btn.textContent = "Copied!";
+            btn.classList.add("copied");
+            setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 2000);
+        });
+    });
+});
+</script>
+</body>
+</html>

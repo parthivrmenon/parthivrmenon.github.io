@@ -17,6 +17,7 @@ class Post:
     date: str
     slug: str
     content: str
+    tags: list
 
 
 def parse_post_markdown(content: str) -> Post:
@@ -27,11 +28,14 @@ def parse_post_markdown(content: str) -> Post:
         k, v = line.split(":", 1)
         frontmatter[k.strip()] = v.strip().strip('"')
     html = markdown.markdown(body, extensions=["fenced_code", "tables", "codehilite"])
+    tags_raw = frontmatter.get("tags", "")
+    tags = [t.strip() for t in tags_raw.split("|") if t.strip()]
     return Post(
         title=frontmatter["title"],
         date=frontmatter["date"],
         slug=frontmatter["slug"],
         content=html,
+        tags=tags,
     )
 
 

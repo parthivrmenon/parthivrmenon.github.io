@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Disruption Budget Dichotomy: How PDBs help you negotiate Availability</title>
+
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="pygments.css">
+    <link rel="stylesheet" href="post.css">
+</head>
+
+<body>
+
+<nav class="topnav">
+    <a href="/index.html">About</a>
+    <a href="/posts.html">Posts</a>
+</nav>
+
+<header>
+    <h1>The Disruption Budget Dichotomy: How PDBs help you negotiate Availability</h1>
+    <p class="meta">2026-02-22</p>
+    <hr>
+</header>
+
+<main>
+    <p>These are my notes on Pod Disruption Budgets (PDBs). Why? Because there are a couple of gotchas in there that I wanted to understand better. </p>
+<p>-- Inspired by a painful experience I had while configuring PDBs for a production workload :P</p>
+<p>Ok, Here we go!</p>
+<h2>Types of Disruptions</h2>
+<p>In Kubernetes, there are two types of disruptions. The first class of disruptions are <strong>Involuntary disruptions</strong>. These are unavoidable disruptions which include:</p>
+<ul>
+<li>Hardware failure/VM failure or deletion</li>
+<li>A kernel panic</li>
+<li>Node disruption due to network partition</li>
+<li>Eviction of a pod due to node-pressure</li>
+</ul>
+<p>The PodDisruptionBudget is not applicable for any of these disruptions.</p>
+<p>The second class of disruptions are called <strong>Voluntary disruptions</strong>. Voluntary disruptions include:</p>
+<ul>
+<li>Those initiated by application devs like updating/deleting deployment (or pod)</li>
+<li>Those initiated by a cluster administrator (human or automation) like draining a node or pre-empting a pod to make room for something else</li>
+</ul>
+<p>For these cases, a PodDisruptionBudget can be used to limit how many pods can be evicted/disrupted at one time.</p>
+<h2>minAvailable and maxUnavailable</h2>
+<p>A PodDisruptionBudget can be expressed by either minAvailable or maxUnavailable settings.</p>
+<ul>
+<li><strong>minAvailable</strong> specifies how many pods must remain available after an eviction</li>
+<li><strong>maxUnavailable</strong> specifies how many pods may be unavailable after an eviction.</li>
+</ul>
+<p>Both of these can be expressed as absolute numbers or a percentage (of the desired number of replicas). Let’s take a look at the disruption controller code to understand how this works.</p>
+<p>The below code snippet shows the <code>getExpectedPodCount</code> function which returns the <code>desiredHealthy</code> count. The <code>desiredHealthy</code> count tells the controller how many pods need to be kept.</p>
+<p>Let’s look at how minAvailable is handled.</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">minAvailable</span><span class="w"> </span><span class="kt">int</span>
+<span class="nx">minAvailable</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">intstr</span><span class="p">.</span><span class="nx">GetScaledValueFromIntOrPercent</span><span class="p">(</span><span class="nx">pdb</span><span class="p">.</span><span class="nx">Spec</span><span class="p">.</span><span class="nx">MinAvailable</span><span class="p">,</span><span class="w"> </span><span class="nb">int</span><span class="p">(</span><span class="nx">expectedCount</span><span class="p">),</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span>
+<span class="p">}</span>
+<span class="nx">desiredHealthy</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">int32</span><span class="p">(</span><span class="nx">minAvailable</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The <code>desiredHealthy</code> is set equal to the scaled value of <code>minAvailable</code> which makes sense because it is the minimum number of pods that MUST be available.</p>
+<p>Now let’s look at how maxUnavailable is handled.</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">maxUnavailable</span><span class="w"> </span><span class="kt">int</span>
+<span class="nx">maxUnavailable</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">intstr</span><span class="p">.</span><span class="nx">GetScaledValueFromIntOrPercent</span><span class="p">(</span><span class="nx">pdb</span><span class="p">.</span><span class="nx">Spec</span><span class="p">.</span><span class="nx">MaxUnavailable</span><span class="p">,</span><span class="w"> </span><span class="nb">int</span><span class="p">(</span><span class="nx">expectedCount</span><span class="p">),</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span>
+<span class="p">}</span>
+<span class="nx">desiredHealthy</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">expectedCount</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">int32</span><span class="p">(</span><span class="nx">maxUnavailable</span><span class="p">)</span>
+</code></pre></div>
+
+<p><code>desiredHealthy</code> in this case is calculated by subtracting the scaled value of <code>maxUnavailable</code> from the <code>expectedCount</code>. The <code>expectedCount</code> is simply the value of replica(s) specified in the deployment manifest.</p>
+<p>For example, if you have specified 2 replica(s) in the deployment manifest (ie <code>expectedCount = 2</code>) and your <code>maxUnavailable</code> is set to 1, then:</p>
+<p><code>desiredHealthy = expectedCount - maxUnavailable = 2 - 1 = 1</code>.</p>
+<p>The controller is allowed to evict 1 pod at most.</p>
+<p>The scaled value is computed using the <code>intstr.GetScaledValueFromIntOrPercent</code> function.</p>
+<p>The <code>intstr.GetScaledValueFromIntOrPercent</code> function has the following signature:</p>
+<div class="codehilite"><pre><span></span><code><span class="nx">intstr</span><span class="p">.</span><span class="nx">GetScaledValueFromIntOrPercent</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span><span class="w"> </span><span class="nx">total</span><span class="p">,</span><span class="w"> </span><span class="nx">roundUp</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>Where:</strong></p>
+<ul>
+<li><code>value</code> is the user-supplied PDB field (<code>minAvailable</code> or <code>maxUnavailable</code>), expressed as either an integer or a percentage.</li>
+<li><code>total</code> is the expected number of replicas for the workload.</li>
+<li><code>roundUp</code> controls how fractional results are handled when percentages are used. When <code>roundUp</code> is set to true, any fractional result is rounded up to the next integer.</li>
+</ul>
+<p>The percentages are always rounded up. Hence, a fraction of a pod is treated as a whole pod.</p>
+<p>Consider a deployment with a single replica (<code>expectedCount = 1</code>) and a PDB expressed as <code>50%</code>.</p>
+<p>In both cases, <code>intstr.GetScaledValueFromIntOrPercent</code> returns 1.</p>
+<ul>
+<li>
+<p>With <code>minAvailable: 50%</code>, <code>desiredHealthy</code> is 1.
+  No pods may be disrupted. Eviction is blocked.</p>
+</li>
+<li>
+<p>With <code>maxUnavailable: 50%</code>, <code>desiredHealthy</code> is 1 − 1 = 0.
+  Zero healthy pods are required. Eviction is permitted.</p>
+</li>
+</ul>
+<p>The same percentage produces opposite outcomes because it answers two different questions:
+<strong>How many must remain versus How many may be taken away.</strong></p>
+<h2>PDB Behavior Tables</h2>
+<p>The following tables show examples of the relationship between replica counts, the disruption budget and node drain behavior for both <code>minAvailable</code> and <code>maxUnavailable</code> settings.</p>
+<h3>minAvailable Settings</h3>
+<table>
+<thead>
+<tr>
+<th>Replica(s)</th>
+<th>minAvailable</th>
+<th>allowedDisruptions</th>
+<th>Drain behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>Drain is blocked.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1</td>
+<td>1</td>
+<td>Nodes can be drained one node at a time.</td>
+</tr>
+<tr>
+<td>1</td>
+<td>50%</td>
+<td>0</td>
+<td>same as minAvailable=1 due to rounding up. Drain blocked.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>50%</td>
+<td>1</td>
+<td>Nodes can be drained 1 node at a time</td>
+</tr>
+</tbody>
+</table>
+<p>Now let’s look at how maxUnavailable setting affects drain behaviour</p>
+<h3>maxUnavailable Settings</h3>
+<table>
+<thead>
+<tr>
+<th>Replica(s)</th>
+<th>maxUnavailable</th>
+<th>allowedDisruptions</th>
+<th>Drain behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>Drain allowed (pod can be evicted)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1</td>
+<td>1</td>
+<td>Nodes can be drained 1 node at a time</td>
+</tr>
+<tr>
+<td>1</td>
+<td>50%</td>
+<td>1</td>
+<td>Drain allowed (percentage rounds up)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>50%</td>
+<td>1</td>
+<td>Nodes can be drained 1 node at a time</td>
+</tr>
+<tr>
+<td>Armed with this information, we are now ready to answer the opening question.</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The Answer:
+Scenario:</p>
+<p>You run a stateless service with 2 replicas, each scheduled on a different node.</p>
+<p>You’ve configured a PodDisruptionBudget with minAvailable:1</p>
+<p>Question 1: How many pods can be evicted simultaneously?</p>
+<p>Looking at the table, allowedDisruptions: 1. Hence the answer is 1.  </p>
+<p>Follow up: You notice that Kubernetes blocks the drain before evicting the second pod.</p>
+<p>Question 2: Why is Kubernetes allowed to block this operation?</p>
+<p>Looking at the table, you will notice that allowedDisruptions is 0 when there is a single pod. </p>
+<p>The PodDisruptionBudget is configured to block this voluntary disruption as it violates the budget constraint.</p>
+<p>Follow up: You now scale the deployment down to 1 replica.</p>
+<p>Question 3: What happens to the drain, and why?</p>
+<p>Answer: The drain operation is blocked as it clearly violates the configured disruption budget.</p>
+<p>Follow up: you change the PDB to maxUnavailable:50%</p>
+<p>Question 4: Does the behavior change? Why or why not?</p>
+<p>Answer: Yes, maxUnavailable (because percentages are always rounded up) allows pods to be evicted even if there is a single pod left.</p>
+<p>There you go. Next time you encounter PDB’s in an Interview or a production environment, you know how to think about them! </p>
+</main>
+
+<footer>
+    <hr>
+    <nav class="socials">
+        <a href="https://github.com/parthivrmenon" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://www.linkedin.com/in/parthivrmenon/" target="_blank" rel="noopener">LinkedIn</a>
+    </nav>
+</footer>
+
+<script>
+document.querySelectorAll("pre code").forEach(block => {
+    const btn = document.createElement("button");
+    btn.className = "copy-btn";
+    btn.textContent = "Copy";
+    const container = block.closest(".codehilite") || block.parentElement;
+    container.appendChild(btn);
+    btn.addEventListener("click", () => {
+        navigator.clipboard.writeText(block.innerText.trim()).then(() => {
+            btn.textContent = "Copied!";
+            btn.classList.add("copied");
+            setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 2000);
+        });
+    });
+});
+</script>
+</body>
+</html>
