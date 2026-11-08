@@ -2,17 +2,38 @@
    Color Palette
    ============================================================= */
 :root {
-    --color-text:        #e2e2e2;
-    --color-bg:          #141414;
-    --color-muted:       #888;
-    --color-subtle:      #666;
-    --color-heading:     #f0f0f0;
-    --color-accent:      #5a9e6f;
-    --color-link:        #e2e2e2;
-    --color-border:      #2e2e2e;
-    --color-border-soft: #222;
-    --color-border-mid:  #3a3a3a;
-    --color-code-bg:     #1e1e1e;
+    --color-text:        #2b2b2b;
+    --color-bg:          #fbfaf7;
+    --color-muted:       #6b6b6b;
+    --color-subtle:      #8a8a8a;
+    --color-heading:     #111;
+    --color-accent:      #2f7a4a;
+    --color-link:        #2f7a4a;
+    --color-border:      #e4e1da;
+    --color-border-soft: #eeebe5;
+    --color-border-mid:  #d6d2c9;
+    --color-code-bg:     #f3f1ec;
+
+    --font-sans:  'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --font-serif: Charter, 'Iowan Old Style', Georgia, serif;
+    --font-mono:  Menlo, 'SFMono-Regular', Consolas, monospace;
+}
+
+/* Dark palette for readers whose system prefers dark mode */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-text:        #e2e2e2;
+        --color-bg:          #141414;
+        --color-muted:       #888;
+        --color-subtle:      #666;
+        --color-heading:     #f0f0f0;
+        --color-accent:      #5a9e6f;
+        --color-link:        #7dbb8f;
+        --color-border:      #2e2e2e;
+        --color-border-soft: #222;
+        --color-border-mid:  #3a3a3a;
+        --color-code-bg:     #1e1e1e;
+    }
 }
 
 /* =============================================================
@@ -23,9 +44,9 @@
 }
 
 body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    font-size: 1em;
-    line-height: 1.65;
+    font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    line-height: 1.7;
     color: var(--color-text);
     background: var(--color-bg);
     margin: 0;
@@ -36,7 +57,7 @@ body {
    Layout
    ============================================================= */
 header, main, footer {
-    max-width: 780px;
+    max-width: 700px;
     margin: 0 auto;
     padding: 0 1.5rem;
 }
@@ -69,13 +90,15 @@ footer hr  { margin-bottom: 1rem; }
    ============================================================= */
 h1 {
     margin: 0 0 0.5rem;
-    font-size: 3rem;
-    font-weight: 300;
+    font-size: clamp(2rem, 5vw, 2.75rem);
+    font-weight: 500;
+    line-height: 1.2;
     color: var(--color-heading);
 }
 
 h2 {
-    font-weight: 300;
+    font-weight: 500;
+    color: var(--color-heading);
     font-size: 2em;
     padding-top: 30px;
     padding-bottom: 10px;
@@ -84,17 +107,26 @@ h2 {
 }
 
 h3 {
-    font-weight: 300;
+    font-weight: 500;
+    color: var(--color-heading);
     padding-bottom: 6px;
     margin-bottom: 20px;
     font-size: 1.2em;
+}
+
+h4 {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 1.1em;
+    color: var(--color-heading);
+    margin: 2rem 0 0.5rem;
 }
 
 /* =============================================================
    Typography — Links
    ============================================================= */
 a {
-    color: var(--color-link);
+    color: var(--color-text);
     text-decoration: none;
 }
 
@@ -106,7 +138,7 @@ a:hover {
    Navigation
    ============================================================= */
 .topnav {
-    max-width: 780px;
+    max-width: 700px;
     margin: 0 auto;
     padding: 0.75rem 1.5rem;
     display: flex;
