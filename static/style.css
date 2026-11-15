@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
 /* =============================================================
    Color Palette
    ============================================================= */
@@ -13,10 +15,13 @@
     --color-border-soft: #eeebe5;
     --color-border-mid:  #d6d2c9;
     --color-code-bg:     #f3f1ec;
+    --color-tag-border:  #2f7a4a;
 
-    --font-sans:  'Helvetica Neue', Helvetica, Arial, sans-serif;
-    --font-serif: Charter, 'Iowan Old Style', Georgia, serif;
-    --font-mono:  Menlo, 'SFMono-Regular', Consolas, monospace;
+    --font-mono:  'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    --font-sans:  var(--font-mono);
+    --font-serif: var(--font-mono);
+
+    --content-width: 900px;
 }
 
 /* Dark palette for readers whose system prefers dark mode */
@@ -27,12 +32,13 @@
         --color-muted:       #888;
         --color-subtle:      #666;
         --color-heading:     #f0f0f0;
-        --color-accent:      #5a9e6f;
-        --color-link:        #7dbb8f;
+        --color-accent:      #7ee787;
+        --color-link:        #7ee787;
         --color-border:      #2e2e2e;
         --color-border-soft: #222;
         --color-border-mid:  #3a3a3a;
         --color-code-bg:     #1e1e1e;
+        --color-tag-border:  #2d6a3e;
     }
 }
 
@@ -45,7 +51,7 @@
 
 body {
     font-family: var(--font-sans);
-    font-size: 1.0625rem;
+    font-size: 1rem;
     line-height: 1.7;
     color: var(--color-text);
     background: var(--color-bg);
@@ -57,7 +63,7 @@ body {
    Layout
    ============================================================= */
 header, main, footer {
-    max-width: 700px;
+    max-width: var(--content-width);
     margin: 0 auto;
     padding: 0 1.5rem;
 }
@@ -90,7 +96,7 @@ footer hr  { margin-bottom: 1rem; }
    ============================================================= */
 h1 {
     margin: 0 0 0.5rem;
-    font-size: clamp(2rem, 5vw, 2.75rem);
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
     font-weight: 500;
     line-height: 1.2;
     color: var(--color-heading);
@@ -99,7 +105,7 @@ h1 {
 h2 {
     font-weight: 500;
     color: var(--color-heading);
-    font-size: 2em;
+    font-size: 1.6em;
     padding-top: 30px;
     padding-bottom: 10px;
     margin-bottom: 30px;
@@ -138,7 +144,7 @@ a:hover {
    Navigation
    ============================================================= */
 .topnav {
-    max-width: 700px;
+    max-width: var(--content-width);
     margin: 0 auto;
     padding: 0.75rem 1.5rem;
     display: flex;
@@ -178,3 +184,52 @@ a:hover {
     color: var(--color-text);
 }
 
+
+/* =============================================================
+   Terminal Touches
+   ============================================================= */
+::selection {
+    background: var(--color-accent);
+    color: var(--color-bg);
+}
+
+/* Shell prompt before the nav links: "~$ ./about ./posts" */
+.topnav::before {
+    content: "~$";
+    color: var(--color-accent);
+    font-weight: 600;
+}
+
+.topnav a::before {
+    content: "./";
+    color: var(--color-muted);
+}
+
+.topnav a.active::before {
+    color: var(--color-accent);
+}
+
+/* Markdown-style heading markers */
+main h2::before,
+main h3::before,
+main h4::before {
+    color: var(--color-accent);
+    font-weight: 400;
+}
+
+main h2::before { content: "## "; }
+main h3::before { content: "### "; }
+main h4::before { content: "#### "; }
+
+/* Dash bullets for lists */
+main ul {
+    list-style: "- ";
+}
+
+main ul li::marker {
+    color: var(--color-accent);
+}
+
+/* Bracketed footer links: [GitHub] [LinkedIn] */
+.socials a::before { content: "["; }
+.socials a::after  { content: "]"; }
