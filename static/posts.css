@@ -32,8 +32,19 @@
 .tag {
     font-size: 0.7em;
     color: var(--color-muted);
-    border: 1px solid var(--color-border-mid);
+    border: 1px solid var(--color-tag-border);
     border-radius: 3px;
     padding: 0.15em 0.45em;
     white-space: nowrap;
+}
+
+.tag::before {
+    content: "#";
+    color: var(--color-accent);
+}
+
+/* Directory-listing style: "> " marker before every post */
+.posts li .post-title > a::before {
+    content: "> ";
+    color: var(--color-accent);
 }
